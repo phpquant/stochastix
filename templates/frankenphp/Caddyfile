@@ -1,0 +1,72 @@
+{
+	{$CADDY_GLOBAL_OPTIONS}
+
+	frankenphp {
+		{$FRANKENPHP_CONFIG}
+
+		worker {
+			file ./public/index.php
+			env APP_RUNTIME Runtime\FrankenPhpSymfony\Runtime
+			{$FRANKENPHP_WORKER_CONFIG}
+		}
+	}
+}
+
+{$CADDY_EXTRA_CONFIG}
+
+{$SERVER_NAME:localhost} {
+	log {
+		{$CADDY_SERVER_LOG_OPTIONS}
+		# Redact the authorization query parameter that can be set by Mercure
+		format filter {
+			request>uri query {
+				replace authorization REDACTED
+			}
+		}
+	}
+
+	root /app/public
+	encode zstd br gzip
+
+	mercure {
+		# Publisher JWT key
+		publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY} {env.MERCURE_PUBLISHER_JWT_ALG}
+		# Subscriber JWT key
+		subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY} {env.MERCURE_SUBSCRIBER_JWT_ALG}
+		# Allow anonymous subscribers (double-check that it's what you want)
+		anonymous
+		# Enable the subscription API (double-check that it's what you want)
+		subscriptions
+		# Extra directives
+		{$MERCURE_EXTRA_DIRECTIVES}
+	}
+
+	vulcain
+
+	{$CADDY_SERVER_EXTRA_DIRECTIVES}
+
+    # Handle Symfony/PHP routes first
+    # Match paths starting with /api, common Symfony bundles, and the PHP entrypoint
+    @symfony path /api* /bundles* /_profiler* /_wdt* /index.php
+    handle @symfony {
+        @phpRoute {
+            not path /.well-known/mercure*
+            not file {path}
+        }
+        rewrite @phpRoute index.php
+
+        @frontController path index.php
+        php @frontController
+    }
+
+    # Handle static assets
+    # This handle block acts as a catch-all for anything not handled above
+    handle {
+        root * /srv/ui
+        file_server
+    }
+
+    file_server {
+        hide *.php
+    }
+}

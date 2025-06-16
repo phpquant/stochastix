@@ -1,0 +1,68 @@
+name: Build and Release Stochastix
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  APP_IMAGE_NAME: phpquant/stochastix
+  INSTALLER_IMAGE_NAME: phpquant/stochastix-installer
+
+jobs:
+  build_and_push_app:
+    name: Build & Push App Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push App image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./build/app.Dockerfile
+          target: frankenphp_dev
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:${{ github.ref_name }},${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:latest
+          build-args: |
+            UI_REPO=phpquant/stochastix-ui
+            UI_VERSION=latest
+
+  build_and_push_installer:
+    name: Build & Push Installer Image
+    runs-on: ubuntu-latest
+    needs: build_and_push_app
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Installer image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./build/installer/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.INSTALLER_IMAGE_NAME }}:latest
