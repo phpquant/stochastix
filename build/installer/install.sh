@@ -40,7 +40,7 @@ echo "🚀 Installing Stochastix... (This may take 3 to 10 minutes depending on 
 
 # Use the mounted Docker socket to run docker-compose on the host machine,
 # specifying the project directory for context.
-docker run --rm -it -v "${PROJECT_NAME}:/app" ghcr.io/phpquant/stochastix:latest php --version
+docker run --rm -it -v "${PROJECT_PATH}:/app" ghcr.io/phpquant/stochastix:latest php --version
 docker compose -p "${PROJECT_NAME}" -f "${PROJECT_PATH}/compose.yaml" up -d
 
 echo
