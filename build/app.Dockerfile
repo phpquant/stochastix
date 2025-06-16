@@ -67,7 +67,7 @@ RUN set -eux; \
     ds \
   ;
 
-RUN git config --global --add safe.directory /app && git config --global --add safe.directory /repos/core
+RUN git config --global --add safe.directory /app
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
 ENV COMPOSER_ALLOW_SUPERUSER=1
