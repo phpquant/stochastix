@@ -6,27 +6,34 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	# After the installation, the following block can be deleted
 	if [ ! -f composer.json ]; then
 		rm -Rf tmp/
-		composer create-project "symfony/skeleton $SYMFONY_VERSION" tmp --stability="$STABILITY" --prefer-dist --no-progress --no-interaction --no-install
+		composer create-project symfony/skeleton tmp --prefer-dist --no-progress --no-interaction --no-install
 
 		cd tmp
 		cp -Rp . ..
 		cd -
 		rm -Rf tmp/
 
-    	composer config --no-plugins allow-plugins.williarin/cook true
 		composer require "php:>=$PHP_VERSION" runtime/frankenphp-symfony
 		composer config --json extra.symfony.docker 'true'
+    	composer config --no-plugins allow-plugins.williarin/cook true
+		composer config minimum-stability dev
+		composer require stochastix/core
+		composer require --dev symfony/maker-bundle
+
+		sed -i '/###> doctrine\/doctrine-bundle ###/,/###< doctrine\/doctrine-bundle ###/d' compose.yaml
+		sed -i '/###> symfony\/mercure-bundle ###/,/###< symfony\/mercure-bundle ###/d' compose.yaml
+		sed -i '/###> doctrine\/doctrine-bundle ###/,/###< doctrine\/doctrine-bundle ###/d' compose.override.yaml
+		sed -i '/###> symfony\/mercure-bundle ###/,/###< symfony\/mercure-bundle ###/d' compose.override.yaml
+		sed -i '/###> doctrine\/doctrine-bundle ###/,/###< doctrine\/doctrine-bundle ###/d' .env
+		sed -i '/###> symfony\/mercure-bundle ###/,/###< symfony\/mercure-bundle ###/d' .env
 
 		if grep -q ^DATABASE_URL= .env; then
-			echo 'To finish the installation please press Ctrl+C to stop Docker Compose and run: docker compose up --build --wait'
-			sleep infinity
+			exit 0
 		fi
 	fi
 
 	if [ -z "$(ls -A 'vendor/' 2>/dev/null)" ]; then
 		composer install --prefer-dist --no-progress --no-interaction
-		composer require stochastix/core
-		composer require --dev symfony/maker-bundle
 	fi
 
 	# Display information about the current project
@@ -68,6 +75,7 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		fi
 	fi
 
+	chown -R 1000:1000 .
 	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
 	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
 

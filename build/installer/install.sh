@@ -24,8 +24,7 @@ if [ -d "$PROJECT_PATH" ]; then
 fi
 
 echo "Creating new Stochastix project in './${PROJECT_NAME}'..."
-mkdir -p "$PROJECT_PATH"
-mkdir -p "$PROJECT_PATH/frankenphp"
+mkdir -p "$PROJECT_PATH/frankenphp/conf.d"
 
 # Copy the template files from the image into the new project directory
 echo "Scaffolding project files..."
@@ -37,13 +36,14 @@ cp /templates/frankenphp/Caddyfile "${PROJECT_PATH}/frankenphp/Caddyfile"
 cp /templates/frankenphp/conf.d/20-app.dev.ini "${PROJECT_PATH}/frankenphp/conf.d/20-app.dev.ini"
 
 echo "✅ Project files created."
-echo "🚀 Launching Stochastix application... (This may take a minute on the first run)"
+echo "🚀 Installing Stochastix... (This may take 3 to 10 minutes depending on your internet connection)"
 
 # Use the mounted Docker socket to run docker-compose on the host machine,
 # specifying the project directory for context.
-docker compose -p "${PROJECT_NAME}" -f "${PROJECT_PATH}/compose.yaml" up --wait
+docker run --rm -it -v "${PROJECT_NAME}:/app" ghcr.io/phpquant/stochastix:latest php --version
+docker compose -p "${PROJECT_NAME}" -f "${PROJECT_PATH}/compose.yaml" up -d
 
 echo
 echo "✅ Stochastix is running!"
-echo "You can now access the UI at https://localhost (or the host you configured)."
+echo "You can now access the UI at https://localhost."
 echo
