@@ -2,7 +2,7 @@
 FROM alpine:latest
 
 # Install tools needed by the installer script (Docker client and curl)
-RUN apk add --no-cache docker-cli docker-compose curl
+RUN apk add --no-cache docker-cli docker-compose curl nmap
 
 # Copy the project templates into the image
 COPY templates/ /templates/
