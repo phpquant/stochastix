@@ -2,6 +2,10 @@
 
 This repository builds the official Stochastix application images and installer.
 
+## Documentation
+
+For the latest official documentation, visit the [Stochastix Documentation](https://phpquant.github.io/stochastix-docs).
+
 ## Quick Start
 
 To create a new Stochastix project, run the following command, replacing `your-project-name` with the desired name for your project folder:
